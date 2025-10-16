@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: dscut-vision-proxy
+    env: php
+    plan: free
+    region: singapore
+    buildCommand: ""
+    startCommand: ""
+    autoDeploy: true

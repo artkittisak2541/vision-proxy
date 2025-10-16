@@ -1,0 +1,7 @@
+{
+  "name": "dscut/vision-proxy",
+  "description": "Google Vision OCR proxy for InfinityFree",
+  "require": {
+    "php": "^8.0"
+  }
+}
