@@ -1,10 +1,11 @@
 <?php
-// ================================
-// 🚀 Vision Proxy API — Render Edition
-// ================================
+// ======================================
+// 🚀 Vision Proxy API — Render Edition (Final)
+// ======================================
 
-header('Content-Type: application/json; charset=utf-8');
-ob_clean(); // ป้องกัน output buffer ค้าง
+// เปิด output buffer ให้ PHP จัดการ header ได้อย่างปลอดภัย
+if (ob_get_level() == 0) ob_start();
+
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 set_time_limit(25);
@@ -42,14 +43,19 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         <p>Endpoint: <code>https://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'] . "</code></p>
     </body>
     </html>";
+    ob_end_flush();
     exit;
 }
+
+// ตั้ง Content-Type สำหรับ API Response
+header('Content-Type: application/json; charset=utf-8');
 
 // ================================
 // 📁 ตรวจสอบไฟล์สลิป
 // ================================
 if (!isset($_FILES['slip']) || $_FILES['slip']['error'] !== UPLOAD_ERR_OK) {
     echo json_encode(['success' => false, 'error' => 'Missing slip file']);
+    ob_end_flush();
     exit;
 }
 
@@ -70,6 +76,7 @@ if ($keyJson) {
 
 if (!$keyData || !isset($keyData['private_key'])) {
     echo json_encode(['success' => false, 'error' => 'Missing or invalid Google Vision key']);
+    ob_end_flush();
     exit;
 }
 
@@ -77,18 +84,19 @@ if (!$keyData || !isset($keyData['private_key'])) {
 // 🧠 สร้าง JWT สำหรับ OAuth2
 // ================================
 $token_url = "https://oauth2.googleapis.com/token";
-$jwt_header = base64_encode(json_encode(["alg" => "RS256", "typ" => "JWT"]));
-$jwt_claim = base64_encode(json_encode([
+$jwt_header = rtrim(strtr(base64_encode(json_encode(["alg" => "RS256", "typ" => "JWT"])), '+/', '-_'), '=');
+$jwt_claim = rtrim(strtr(base64_encode(json_encode([
     "iss" => $keyData["client_email"],
     "scope" => "https://www.googleapis.com/auth/cloud-vision",
     "aud" => $token_url,
     "exp" => time() + 3600,
     "iat" => time()
-]));
+])), '+/', '-_'), '=');
 
 $private_key = openssl_pkey_get_private($keyData["private_key"]);
 if (!$private_key) {
     echo json_encode(['success' => false, 'error' => 'Invalid private key']);
+    ob_end_flush();
     exit;
 }
 
@@ -115,10 +123,12 @@ curl_close($ch);
 
 if ($err) {
     echo json_encode(['success' => false, 'error' => 'cURL error: '.$err]);
+    ob_end_flush();
     exit;
 }
 if (empty($tokenRes['access_token'])) {
     echo json_encode(['success' => false, 'error' => 'Vision Auth failed', 'debug' => $tokenRes]);
+    ob_end_flush();
     exit;
 }
 $access_token = $tokenRes['access_token'];
@@ -143,7 +153,7 @@ curl_setopt_array($ch, [
         "Authorization: Bearer $access_token"
     ],
     CURLOPT_POSTFIELDS => json_encode($vision_request),
-    CURLOPT_TIMEOUT => 15,
+    CURLOPT_TIMEOUT => 20,
 ]);
 $response = json_decode(curl_exec($ch), true);
 $err = curl_error($ch);
@@ -151,6 +161,7 @@ curl_close($ch);
 
 if ($err) {
     echo json_encode(['success' => false, 'error' => 'Vision API connection error: '.$err]);
+    ob_end_flush();
     exit;
 }
 
@@ -159,6 +170,7 @@ if ($err) {
 // ================================
 if (empty($response["responses"][0]["textAnnotations"])) {
     echo json_encode(['success' => false, 'error' => 'No text found', 'debug' => $response]);
+    ob_end_flush();
     exit;
 }
 
@@ -168,4 +180,7 @@ echo json_encode([
     'success' => true,
     'text' => $text
 ], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+
+// ปิด output buffer อย่างปลอดภัย
+ob_end_flush();
 ?>
