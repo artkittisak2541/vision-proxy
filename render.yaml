@@ -2,7 +2,6 @@ services:
   - type: web
     name: vision-proxy
     env: php
-    plan: free
     buildCommand: ""
     startCommand: php -S 0.0.0.0:10000 index.php
     autoDeploy: true
