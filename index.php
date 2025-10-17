@@ -1,30 +1,64 @@
 <?php
+// กำหนด Header
 header('Content-Type: application/json; charset=utf-8');
+
+// ปิด Warning ที่ไม่จำเป็น
 error_reporting(0);
 
+// 🌐 หากเป็น GET (เปิดเว็บผ่านเบราว์เซอร์)
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    echo json_encode(['error' => 'Invalid method']);
+    header('Content-Type: text/html; charset=utf-8');
+    echo "<!DOCTYPE html>
+    <html lang='th'>
+    <head>
+        <meta charset='UTF-8'>
+        <title>Vision Proxy API</title>
+        <style>
+            body {
+                background: linear-gradient(135deg, #00b4d8, #0077b6);
+                color: white;
+                font-family: 'Kanit', sans-serif;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                height: 100vh;
+                flex-direction: column;
+            }
+            h1 { font-size: 2rem; margin-bottom: 1rem; }
+            p { font-size: 1.2rem; opacity: 0.8; }
+        </style>
+    </head>
+    <body>
+        <h1>🚀 Vision Proxy API is Running!</h1>
+        <p>ส่งคำขอแบบ POST พร้อมไฟล์ slip เพื่อตรวจ OCR</p>
+        <p>URL: <b>https://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'] . "</b></p>
+    </body>
+    </html>";
     exit;
 }
 
-// ตรวจสอบการอัปโหลด
+// 🔒 ตรวจสอบการอัปโหลดไฟล์
 if (!isset($_FILES['slip'])) {
     echo json_encode(['error' => 'Missing slip file']);
     exit;
 }
 
-// โหลด Key
+// 🔑 โหลด Google Vision Key
 $keyFile = __DIR__ . '/google-vision-key.json';
 if (!file_exists($keyFile)) {
     echo json_encode(['error' => 'Missing Google Vision key']);
     exit;
 }
 $keyData = json_decode(file_get_contents($keyFile), true);
+if (!$keyData) {
+    echo json_encode(['error' => 'Invalid key file format']);
+    exit;
+}
 
-// อ่านภาพ base64
+// 🔄 อ่านภาพ Base64
 $image_base64 = base64_encode(file_get_contents($_FILES['slip']['tmp_name']));
 
-// ขอ Token
+// 🧠 ขอ Access Token
 $token_url = "https://oauth2.googleapis.com/token";
 $jwt_header = base64_encode(json_encode(["alg" => "RS256", "typ" => "JWT"]));
 $jwt_claim = base64_encode(json_encode([
@@ -59,7 +93,7 @@ if (!isset($tokenRes['access_token'])) {
 
 $access_token = $tokenRes['access_token'];
 
-// เรียก Vision API
+// 📸 เรียก Google Vision API
 $vision_request = [
     "requests" => [[
         "image" => ["content" => $image_base64],
@@ -85,8 +119,9 @@ if (!isset($response["responses"][0]["textAnnotations"])) {
     exit;
 }
 
-$text = $response["responses"][0]["textAnnotations"][0]["description"] ?? '';
+$text = trim($response["responses"][0]["textAnnotations"][0]["description"] ?? '');
+
 echo json_encode([
     'success' => true,
     'text' => $text
-]);
+], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
