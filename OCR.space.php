@@ -32,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     </head>
     <body>
         <h1>🚀 OCR.space Proxy API is Running!</h1>
-        <p>ส่งคำขอแบบ <b>POST</b> พร้อมไฟล์ <code>slip</code> เพื่อตรวจ OCR</p>
+        <p>ส่งคำขอแบบ <b>POST</b> พร้อมไฟล์ <code>slip</code> เพื่อตรวจ OCR ฟรี</p>
         <p>Endpoint: <code>https://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'] . "</code></p>
     </body>
     </html>";
@@ -51,7 +51,7 @@ if (!isset($_FILES['slip']) || $_FILES['slip']['error'] !== UPLOAD_ERR_OK) {
 // 🔄 เรียก OCR.space API (ฟรี)
 // =========================
 $image_path = $_FILES['slip']['tmp_name'];
-$api_key = "helloworld"; // ใช้ key ฟรี
+$api_key = "helloworld"; // ใช้ key ฟรีจาก OCR.space
 
 $ch = curl_init();
 curl_setopt_array($ch, [
