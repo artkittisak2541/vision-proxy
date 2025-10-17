@@ -121,7 +121,7 @@ $image_base64 = base64_encode(file_get_contents($_FILES['slip']['tmp_name']));
 $vision_request = [
     "requests" => [[
         "image" => ["content" => $image_base64],
-        "features" => [["type" => "TEXT_DETECTION"]]
+        "features" => [["type" => "DOCUMENT_TEXT_DETECTION"]]
     ]]
 ];
 
