@@ -1,9 +1,8 @@
 services:
   - type: web
-    name: dscut-vision-proxy
+    name: vision-proxy
     env: php
     plan: free
-    region: singapore
     buildCommand: ""
-    startCommand: ""
+    startCommand: php -S 0.0.0.0:10000 index.php
     autoDeploy: true
